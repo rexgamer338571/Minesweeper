@@ -1,0 +1,11 @@
+{
+  "click": {
+    "sounds": ["minesweeper:click"]
+  },
+  "bomb": {
+    "sounds": ["minesweeper:bomb"]
+  },
+  "flag": {
+    "sounds": ["minesweeper:flag"]
+  }
+}
