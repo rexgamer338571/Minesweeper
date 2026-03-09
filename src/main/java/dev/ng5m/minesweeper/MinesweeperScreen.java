@@ -75,7 +75,7 @@ public class MinesweeperScreen extends Screen {
             }
         });
 
-        this.checkboxEffects = CheckboxWidget.builder(Text.of("Effects"), textRenderer).build();
+        this.checkboxEffects = CheckboxWidget.builder(Text.of("SFX"), textRenderer).build();
         this.checkboxEvil = CheckboxWidget.builder(Text.of("Alt"), textRenderer).build();
 
         addDrawableChild(checkboxEffects);
@@ -194,6 +194,8 @@ public class MinesweeperScreen extends Screen {
         checkboxEvil.setPosition(dx, dy);
 
         super.render(context, mouseX, mouseY, deltaTicks);
+
+        context.fill(startX - 2, startY - 2, endX + 2, startY + (tileHeight * game.height) + 2, 0xff000000);
 
         for (int x = 0; x < game.width; x++) {
             for (int y = 0; y < game.height; y++) {
