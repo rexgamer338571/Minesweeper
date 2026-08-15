@@ -6,9 +6,9 @@
   "description": "Minesweeper mod!",
   "authors": ["NG5M"],
   "contact": {
-    "discord": ""
+    "discord": "@ng5m"
   },
-  "license": "All-Rights-Reserved",
+  "license": "MIT",
   "icon": "assets/minesweeper/icon.png",
   "environment": "client",
   "entrypoints": {

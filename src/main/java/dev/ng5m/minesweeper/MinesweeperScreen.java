@@ -2,25 +2,25 @@ package dev.ng5m.minesweeper;
 
 import dev.ng5m.minesweeper.client.MinesweeperFabricPlatform;
 import dev.ng5m.minesweeper.game.Minesweeper;
-import net.minecraft.client.gl.RenderPipelines;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.CheckboxWidget;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
-
 import java.util.function.IntConsumer;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.Checkbox;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import org.jspecify.annotations.NonNull;
 
 public class MinesweeperScreen extends Screen {
     public static final MinesweeperScreen INSTANCE = new MinesweeperScreen();
 
-    private static final Identifier TEXTURE_ATLAS = Identifier.of("minesweeper", "atlas/atlas.png");
-    private static final Identifier SEVEN_SEGMENT_ATLAS = Identifier.of("minesweeper", "atlas/7s.png");
-    private static final Identifier OUTLINED_ATLAS = Identifier.of("minesweeper", "atlas/outlined.png");
-    private static final Identifier DAVE = Identifier.of("minesweeper", "textures/dave.png");
-    private static final Identifier DAVE_ATLAS = Identifier.of("minesweeper", "atlas/dave.png");
+    private static final Identifier TEXTURE_ATLAS = Identifier.fromNamespaceAndPath("minesweeper", "atlas/atlas.png");
+    private static final Identifier SEVEN_SEGMENT_ATLAS = Identifier.fromNamespaceAndPath("minesweeper", "atlas/7s.png");
+    private static final Identifier OUTLINED_ATLAS = Identifier.fromNamespaceAndPath("minesweeper", "atlas/outlined.png");
+    private static final Identifier DAVE = Identifier.fromNamespaceAndPath("minesweeper", "textures/dave.png");
+    private static final Identifier DAVE_ATLAS = Identifier.fromNamespaceAndPath("minesweeper", "atlas/dave.png");
     private static final int ATLAS_ELEMENT_SIZE = 16;
     private static final int ATLAS_SIZE = 64;
     private static final int ATLAS_ROW_LENGTH = ATLAS_SIZE / ATLAS_ELEMENT_SIZE;
@@ -40,14 +40,14 @@ public class MinesweeperScreen extends Screen {
     private int displayWidth, displayHeight;
     private int tileWidth, tileHeight;
 
-    private TextFieldWidget inputMines;
-    private TextFieldWidget inputWidth;
-    private TextFieldWidget inputHeight;
-    private CheckboxWidget checkboxEffects;
-    private CheckboxWidget checkboxEvil;
+    private EditBox inputMines;
+    private EditBox inputWidth;
+    private EditBox inputHeight;
+    private Checkbox checkboxEffects;
+    private Checkbox checkboxEvil;
 
     private MinesweeperScreen() {
-        super(Text.of("Minesweeper"));
+        super(Component.nullToEmpty("Minesweeper"));
     }
 
     @Override
@@ -75,11 +75,11 @@ public class MinesweeperScreen extends Screen {
             }
         });
 
-        this.checkboxEffects = CheckboxWidget.builder(Text.of("SFX"), textRenderer).build();
-        this.checkboxEvil = CheckboxWidget.builder(Text.of("Alt"), textRenderer).build();
+        this.checkboxEffects = Checkbox.builder(Component.nullToEmpty("SFX"), font).build();
+        this.checkboxEvil = Checkbox.builder(Component.nullToEmpty("Alt"), font).build();
 
-        addDrawableChild(checkboxEffects);
-        addDrawableChild(checkboxEvil);
+        addRenderableWidget(checkboxEffects);
+        addRenderableWidget(checkboxEvil);
     }
 
     @Override
@@ -89,21 +89,21 @@ public class MinesweeperScreen extends Screen {
         initDimensions();
     }
 
-    private TextFieldWidget createIntInput(int initial, int max, IntConsumer listener) {
-        TextFieldWidget textFieldWidget = new TextFieldWidget(
-                textRenderer, textRenderer.getWidth("000") * 2, ATLAS_ELEMENT_SIZE,
-                Text.of(String.valueOf(initial))
+    private EditBox createIntInput(int initial, int max, IntConsumer listener) {
+        EditBox textFieldWidget = new EditBox(
+                font, font.width("000") * 2, ATLAS_ELEMENT_SIZE,
+                Component.nullToEmpty(String.valueOf(initial))
         );
-        textFieldWidget.setChangedListener(s -> {
+        textFieldWidget.setResponder(s -> {
             try {
-                int i = Math.max(1, Math.min(Integer.parseInt(s), max));
+                int i = Math.clamp(Integer.parseInt(s), 1, max);
                 listener.accept(i);
             } catch (NumberFormatException ignored) {
             }
         });
-        textFieldWidget.setText(String.valueOf(initial));
+        textFieldWidget.setValue(String.valueOf(initial));
 
-        addDrawableChild(textFieldWidget);
+        addRenderableWidget(textFieldWidget);
 
         return textFieldWidget;
     }
@@ -123,19 +123,19 @@ public class MinesweeperScreen extends Screen {
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
+    public void extractRenderState(@NonNull GuiGraphicsExtractor context, int mouseX, int mouseY, float deltaTicks) {
         float scale = (float) ATLAS_ELEMENT_SIZE / OUTLINED_ATLAS_ELEMENT_HEIGHT;
         int headerY = startY - 10 - ATLAS_ELEMENT_SIZE;
 
-        if (checkboxEvil.isChecked()) {
-            context.drawTexture(RenderPipelines.GUI_TEXTURED, DAVE, width / 2 - ATLAS_ELEMENT_SIZE / 2,
+        if (checkboxEvil.selected()) {
+            context.blit(RenderPipelines.GUI_TEXTURED, DAVE, width / 2 - ATLAS_ELEMENT_SIZE / 2,
                     headerY, 0, 0,
                     ATLAS_ELEMENT_SIZE, ATLAS_ELEMENT_SIZE,
                     268, 268,
                     268, 268
             );
         } else {
-            context.drawTexture(RenderPipelines.GUI_TEXTURED, DAVE_ATLAS, width / 2 - ATLAS_ELEMENT_SIZE / 2, headerY,
+            context.blit(RenderPipelines.GUI_TEXTURED, DAVE_ATLAS, width / 2 - ATLAS_ELEMENT_SIZE / 2, headerY,
                     (game.ended ? game.lost ? 3 : 2 : 0) * ATLAS_ELEMENT_SIZE, 0,
                     ATLAS_ELEMENT_SIZE, ATLAS_ELEMENT_SIZE,
                     ATLAS_ELEMENT_SIZE, ATLAS_ELEMENT_SIZE,
@@ -145,7 +145,7 @@ public class MinesweeperScreen extends Screen {
 
 
         int dx = startX;
-        context.drawTexture(RenderPipelines.GUI_TEXTURED, TEXTURE_ATLAS, startX, headerY,
+        context.blit(RenderPipelines.GUI_TEXTURED, TEXTURE_ATLAS, startX, headerY,
                 2 * ATLAS_ELEMENT_SIZE, 2 * ATLAS_ELEMENT_SIZE,
                 ATLAS_ELEMENT_SIZE, ATLAS_ELEMENT_SIZE,
                 ATLAS_ELEMENT_SIZE, ATLAS_ELEMENT_SIZE,
@@ -158,7 +158,7 @@ public class MinesweeperScreen extends Screen {
         int endX = startX + displayWidth;
         dx = (int) (endX - (OUTLINED_ATLAS_ELEMENT_WIDTH * scale) * 3 + 3 - ATLAS_ELEMENT_SIZE);
 
-        context.drawTexture(RenderPipelines.GUI_TEXTURED, TEXTURE_ATLAS,
+        context.blit(RenderPipelines.GUI_TEXTURED, TEXTURE_ATLAS,
                 dx, headerY,
                 3 * ATLAS_ELEMENT_SIZE, 3 * ATLAS_ELEMENT_SIZE,
                 ATLAS_ELEMENT_SIZE, ATLAS_ELEMENT_SIZE,
@@ -174,18 +174,18 @@ public class MinesweeperScreen extends Screen {
 
         dx = 5;
         int dy = headerY;
-        context.drawText(textRenderer, "Mines", dx, dy, 0xffffffff, false);
-        dy += textRenderer.fontHeight + 2;
+        context.text(font, "Mines", dx, dy, 0xffffffff, false);
+        dy += font.lineHeight + 2;
         this.inputMines.setPosition(dx, dy);
 
         dy += ATLAS_ELEMENT_SIZE + 5;
-        context.drawText(textRenderer, "Width", dx, dy, 0xffffffff, false);
-        dy += textRenderer.fontHeight + 2;
+        context.text(font, "Width", dx, dy, 0xffffffff, false);
+        dy += font.lineHeight + 2;
         this.inputWidth.setPosition(dx, dy);
 
         dy += ATLAS_ELEMENT_SIZE + 5;
-        context.drawText(textRenderer, "Height", dx, dy, 0xffffffff, false);
-        dy += textRenderer.fontHeight + 2;
+        context.text(font, "Height", dx, dy, 0xffffffff, false);
+        dy += font.lineHeight + 2;
         this.inputHeight.setPosition(dx, dy);
 
         dy += ATLAS_ELEMENT_SIZE + 5;
@@ -193,7 +193,7 @@ public class MinesweeperScreen extends Screen {
         dy += checkboxEffects.getHeight() + 10;
         checkboxEvil.setPosition(dx, dy);
 
-        super.render(context, mouseX, mouseY, deltaTicks);
+        super.extractRenderState(context, mouseX, mouseY, deltaTicks);
 
         context.fill(startX - 2, startY - 2, endX + 2, startY + (tileHeight * game.height) + 2, 0xff000000);
 
@@ -204,7 +204,7 @@ public class MinesweeperScreen extends Screen {
                 int u = tile % ATLAS_ROW_LENGTH;
                 int v = tile / ATLAS_ROW_LENGTH;
 
-                context.drawTexture(RenderPipelines.GUI_TEXTURED, TEXTURE_ATLAS,
+                context.blit(RenderPipelines.GUI_TEXTURED, TEXTURE_ATLAS,
                         startX + (tileWidth * x), startY + (tileHeight * y),
                         u * ATLAS_ELEMENT_SIZE, v * ATLAS_ELEMENT_SIZE,
                         tileWidth, tileHeight,
@@ -215,16 +215,16 @@ public class MinesweeperScreen extends Screen {
         }
     }
 
-    private int drawCounter(DrawContext context, int x, int y, int n, float scale) {
-        context.getMatrices().pushMatrix();
-        context.getMatrices().scale(scale);
+    private int drawCounter(GuiGraphicsExtractor context, int x, int y, int n, float scale) {
+        context.pose().pushMatrix();
+        context.pose().scale(scale);
 
         x = Math.round(x / scale);
 
         for (int i = 0; i < 3; i++) {
             int digit = Math.floorDiv(n, POWERS_OF_10[i]);
 
-            context.drawTexture(RenderPipelines.GUI_TEXTURED, OUTLINED_ATLAS,
+            context.blit(RenderPipelines.GUI_TEXTURED, OUTLINED_ATLAS,
                     x, Math.round(y / scale),
                     digit * OUTLINED_ATLAS_ELEMENT_WIDTH, 0,
                     OUTLINED_ATLAS_ELEMENT_WIDTH, OUTLINED_ATLAS_ELEMENT_HEIGHT,
@@ -235,13 +235,13 @@ public class MinesweeperScreen extends Screen {
             x += OUTLINED_ATLAS_ELEMENT_WIDTH + 1;
         }
 
-        context.getMatrices().popMatrix();
+        context.pose().popMatrix();
 
         return x;
     }
 
     @Override
-    public boolean mouseClicked(Click click, boolean doubled) {
+    public boolean mouseClicked(MouseButtonEvent click, boolean doubled) {
         if (click.x() < startX || click.x() >= startX + displayWidth
                 || click.y() < startY || click.y() >= startY + displayHeight) {
             double midX = width / 2.0;
@@ -249,7 +249,7 @@ public class MinesweeperScreen extends Screen {
             double headerY = startY - 10 - ATLAS_ELEMENT_SIZE;
             if (click.x() >= midX - midOffset && click.x() < midX + midOffset
                     && click.y() >= headerY && click.y() < headerY + ATLAS_ELEMENT_SIZE) {
-                game.clickDave(checkboxEffects.isChecked());
+                game.clickDave(checkboxEffects.selected());
                 return true;
             }
 
@@ -260,7 +260,7 @@ public class MinesweeperScreen extends Screen {
         int relativeX = (int) (click.x() - startX), relativeY = (int) (click.y() - startY);
         int cellX = relativeX / tileWidth, cellY = relativeY / tileHeight;
 
-        game.clickCell(cellX, cellY, click.button() == 1, checkboxEffects.isChecked());
+        game.clickCell(cellX, cellY, click.button() == 1, checkboxEffects.selected());
 
         return true;
     }

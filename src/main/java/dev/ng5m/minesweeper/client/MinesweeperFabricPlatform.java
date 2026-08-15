@@ -1,12 +1,12 @@
 package dev.ng5m.minesweeper.client;
 
 import dev.ng5m.minesweeper.game.MinesweeperPlatform;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.sound.SoundEvent;
+import net.minecraft.client.Minecraft;
+import net.minecraft.sounds.SoundEvent;
 
 public class MinesweeperFabricPlatform implements MinesweeperPlatform {
     public static final MinesweeperFabricPlatform INSTANCE = new MinesweeperFabricPlatform();
-    private static final MinecraftClient MC = MinecraftClient.getInstance();
+    private static final Minecraft MC = Minecraft.getInstance();
 
     @Override
     public void playSound(Sound sound) {
